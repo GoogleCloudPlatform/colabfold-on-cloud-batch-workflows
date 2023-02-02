@@ -1,0 +1,136 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+main:
+  params: [args]
+  steps:
+    - callColabfoldPipeline:
+        call: runColabfoldPipeline
+        args:
+          args: ${args}
+
+
+runColabfoldPipeline:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - batchApi: "batch.googleapis.com/v1"
+          - batchApiUrl: ${"https://" + batchApi + "/projects/" + args.project_id + "/locations/" + args.region + "/jobs"}
+          - maxRetryCount: 2
+          - maxRunDuration: "7200s"
+    - runColabfoldPipelineCloudBatchJobs:
+        parallel:
+          concurrency_limit: ${args.parallelism}
+          for:
+            value: runner
+            in: ${args.runners}
+            steps:
+              - logJobStart:
+                  call: sys.log
+                  args:
+                    data: ${"Starting job " + runner.job_id}
+              - startBatchJob:
+                  call: http.post
+                  args:
+                    url: ${batchApiUrl}
+                    query:
+                      job_id: ${runner.job_id}
+                    headers:
+                      Content-Type: application/json
+                    auth:
+                      type: OAuth2
+                    body:
+                      taskGroups:
+                        taskSpec:
+                          runnables:
+                            - container:
+                                imageUri: ${args.image_uri}
+                                entrypoint: "python"
+                                commands:
+                                  - "run_colabfold.py"
+                                  - ${"--input-dir=" + runner.input_dir}
+                                  - ${"--result-dir=" + runner.result_dir}
+                                  - ${"--msa-mode=" + runner.msa_mode}
+                                  - ${"--num-models=" + runner.num_models}
+                                  - ${"--num-recycles=" + runner.num_recycles}
+                                  - ${"--stop-at-score=" + runner.stop_at_score}
+                                  - ${"--model-type=" + runner.model_type}
+                                  - ${"--rank-by=" + runner.rank_by}
+                                  - ${"--pair-mode=" + runner.pair_mode}
+                                  - ${"--use-custom-msa=" + runner.use_custom_msa}
+                                  - ${"--use-amber=" + runner.use_amber}
+                                  - ${"--use-templates=" + runner.use_templates}
+                                  - ${"--do-not-overwrite-results=" + runner.do_not_overwrite_results}
+                                  - ${"--zip-results=" + runner.zip_results}
+                                options: "--privileged"
+                                volumes:
+                                  - "/var/lib/nvidia/lib64:/usr/local/nvidia/lib64"
+                                  - "/var/lib/nvidia/bin:/usr/local/nvidia/bin"
+                                  - ${args.job_gcsfuse_local_dir + ":" + args.job_gcsfuse_local_dir}
+                          volumes:
+                            - gcs:
+                                remotePath: ${args.job_gcs_path}
+                              mountPath: ${args.job_gcsfuse_local_dir}
+                          computeResource:
+                            cpuMilli: ${args.cpu_milli} 
+                            memoryMib: ${args.memory_mib}
+                            bootDiskMib: ${args.boot_disk_mib}
+                          maxRetryCount: ${maxRetryCount}
+                          maxRunDuration: ${maxRunDuration}
+                        taskCount: 1 
+                      allocationPolicy:
+                        instances:
+                          - policy:
+                              machineType: ${args.machine_type}
+                              provisioningModel: "SPOT"
+                              accelerators:
+                                - type: ${args.gpu_type}
+                                  count: ${args.gpu_count}
+                            installGpuDrivers: true
+                      logsPolicy:
+                        destination: CLOUD_LOGGING
+              - getJob:
+                  call: http.get
+                  args:
+                    url: ${batchApiUrl + "/" + runner.job_id}
+                    auth:
+                      type: OAuth2
+                  result: getJobResult
+              - logState:
+                  call: sys.log
+                  args:
+                    data: ${"Current job state for job  " + runner.job_id + " is " + getJobResult.body.status.state}
+              - checkState:
+                  switch:
+                    - condition: ${getJobResult.body.status.state == "SUCCEEDED" or getJobResult.body.status.state == "FAILED"}
+                      next: recordBatchJobCompletion
+                  next: sleep
+              - sleep:
+                  call: sys.sleep
+                  args:
+                    seconds: 10
+                  next: getJob
+              - recordBatchJobCompletion:
+                  call: googleapis.firestore.v1.projects.databases.documents.patch
+                  args:
+                    name: ${"projects/"+args.project_id+"/databases/(default)/documents/colabfold-experiments/"+runner.firestore_ref}
+                    updateMask:
+                      fieldPaths: ["status", "completion_time"]
+                    body:
+                      fields:
+                        status:
+                          stringValue: ${getJobResult.body.status.state}
+                        completion_time:
+                          timestampValue: ${time.format(sys.now())}
