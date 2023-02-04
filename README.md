@@ -103,6 +103,26 @@ _WORKFLOW_NAME=$WORKFLOW_NAME
 gcloud builds submit colabfold-on-cloud-batch --config=colabfold-on-cloud-batch/cloudbuild.yaml --substitutions $SUBSTITUTIONS --machine-type=e2-highcpu-8
 ```
 
+#### Create a Workbench to execute the experiment
+
+In the sandbox environment, an instance of Vertex Workbench is used as a development/experimentation environment to customize, start, and analyze inference pipelines runs. There are a couple of setup steps that are required before you can use example notebooks.
+
+From the Cloud Shell, create a new Workbench user-managed notebook.
+
+```
+gcloud notebooks instances create colabfold-workbench \
+--vm-image-project=deeplearning-platform-release \
+--vm-image-family=common-cpu-notebooks \
+--machine-type=n1-standard-4 \
+--location=us-central1-a
+```
+
+Connect to JupyterLab on your Vertex Workbench instance and start a JupyterLab terminal.
+
+From the JupyterLab terminal clone the demo repository:
+`git clone https://github.com/GoogleCloudPlatform/vertex-ai-alphafold-inference-pipeline.git`
+
+
 ## Getting started
 
 
