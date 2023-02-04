@@ -61,6 +61,10 @@ PROJECT_NUMBER=$(gcloud projects list --filter="$(gcloud config get-value projec
 gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
         --role="roles/run.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+        --role="roles/workflows.admin"
 ```
 
 ### Create a Cloud Storage bucket
