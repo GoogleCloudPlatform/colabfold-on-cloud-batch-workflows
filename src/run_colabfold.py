@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Utility module to call colabfold inference pipeline."""
+
 import argparse
 import logging
 import sys
@@ -23,6 +25,7 @@ from pathlib import Path
 
 
 def run_colabfold(args):
+    """Invoke Colabfold inference pipeline."""
     if 'logging_setup' not in globals():
         setup_logging(Path(args.result_dir).joinpath("log.txt"))
         logging_setup = True
