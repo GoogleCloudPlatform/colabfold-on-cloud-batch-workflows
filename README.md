@@ -83,7 +83,7 @@ The components of the solution - the container image, the inference workflow and
 #### Clone the repo
 
 ```
-git clone <to be defined>
+git clone https://github.com/GoogleCloudPlatform/colabfold-on-cloud-batch-workflows
 ```
 
 #### Submit a Cloud Build job
@@ -100,7 +100,7 @@ _REGION=$REGION,\
 _IMAGE_NAME=$IMAGE_NAME,\
 _WORKFLOW_NAME=$WORKFLOW_NAME
 
-gcloud builds submit colabfold-on-cloud-batch --config=colabfold-on-cloud-batch/cloudbuild.yaml --substitutions $SUBSTITUTIONS --machine-type=e2-highcpu-8
+gcloud builds submit colabfold-on-cloud-batch --config=colabfold-on-cloud-batch-workflows/cloudbuild.yaml --substitutions $SUBSTITUTIONS --machine-type=e2-highcpu-8
 ```
 
 #### Create a Workbench to execute the experiment
