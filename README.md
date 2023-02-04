@@ -71,7 +71,7 @@ Create a bucket in the region in which you intend to run your inference jobs. Ma
 
 ```
 export REGION=<YOUR REGION>
-export BUCKET_NAME=<YOUR BUCKET NAME>
+export BUCKET_NAME=<gs://your_bucket_name>
 
 gsutil mb -l $REGION $BUCKET_NAME
 ```
