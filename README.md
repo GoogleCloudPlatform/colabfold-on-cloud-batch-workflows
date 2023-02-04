@@ -50,7 +50,7 @@ logging.googleapis.com \
 file.googleapis.com \
 workflows.googleapis.com \
 batch.googleapis.com \
-cloudfunctions.googleapis.com 
+notebooks.googleapis.com
 ```
 
 ### Grant permissions to Cloud Build service account
