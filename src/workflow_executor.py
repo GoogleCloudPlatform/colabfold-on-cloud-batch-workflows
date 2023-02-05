@@ -55,7 +55,7 @@ def prepare_args_for_experiment(
     rank_by: str = 'auto',
     pair_mode: str = 'unpaired_paired',
     stop_at_score: int = 100,
-    zip_results: bool = False,
+    zip_results: bool = False
 ) -> T.Dict:
     '''
     Function to:
@@ -110,17 +110,20 @@ def prepare_args_for_experiment(
 
         >> The following parameters are related to the Colabfold inference pipeline.
         > These are the default parameters found in the original Colabfold repository.
-        use_amber: bool = False
-        msa_mode: str = 'MMseqs2 (UniRef+Environmental)'
-        model_type: str = 'auto'
-        num_models: int = 5
-        num_recycle: int = 3
-        use_custom_msa: bool = False
-        do_not_overwrite_results: bool = False
-        rank_by: str = 'auto'
-        pair_mode: str = 'unpaired+paired'
-        stop_at_score: int = 100
-        zip_results: bool = False
+            template_mode: str = "none"
+            use_cpu: bool = False
+            use_gpu_relax: bool = False
+            use_amber: bool = False
+            msa_mode: str = 'mmseqs2_uniref_env'
+            model_type: str = 'auto'
+            num_models: int = 5
+            num_recycle: int = 3
+            custom_template_path: str = None
+            overwrite_existing_results: bool = False
+            rank_by: str = 'auto'
+            pair_mode: str = 'unpaired_paired'
+            stop_at_score: int = 100
+            zip_results: bool = False
     '''
 
     storage_client = storage.Client()
