@@ -42,19 +42,20 @@ def prepare_args_for_experiment(
     gpu_count: int = 1,
     job_gcsfuse_local_dir: str = '/mnt/disks/gcs/colabfold',
     parallelism: int = 8,
-    use_templates: bool = False,
+    template_mode: str = "none",
+    use_cpu: bool = False,
+    use_gpu_relax: bool = False,
     use_amber: bool = False,
-    msa_mode: str = 'MMseqs2 (UniRef+Environmental)',
+    msa_mode: str = 'mmseqs2_uniref_env',
     model_type: str = 'auto',
     num_models: int = 5,
-    num_recycles: int = 3,
-    model_order: list = [3, 4, 5, 1, 2],
-    use_custom_msa: bool = False,
-    do_not_overwrite_results: bool = False,
+    num_recycle: int = 3,
+    custom_template_path: str = None,
+    overwrite_existing_results: bool = False,
     rank_by: str = 'auto',
-    pair_mode: str = 'unpaired+paired',
+    pair_mode: str = 'unpaired_paired',
     stop_at_score: int = 100,
-    zip_results: bool = False
+    zip_results: bool = False,
 ) -> T.Dict:
     '''
     Function to:
@@ -109,13 +110,11 @@ def prepare_args_for_experiment(
 
         >> The following parameters are related to the Colabfold inference pipeline.
         > These are the default parameters found in the original Colabfold repository.
-        use_templates: bool = False
         use_amber: bool = False
         msa_mode: str = 'MMseqs2 (UniRef+Environmental)'
         model_type: str = 'auto'
         num_models: int = 5
-        num_recycles: int = 3
-        model_order: list = [3, 4, 5, 1, 2]
+        num_recycle: int = 3
         use_custom_msa: bool = False
         do_not_overwrite_results: bool = False
         rank_by: str = 'auto'
@@ -126,6 +125,19 @@ def prepare_args_for_experiment(
 
     storage_client = storage.Client()
     db = firestore.Client()
+
+    if template_mode == "pdb70":
+        use_templates = True
+        custom_template_path = None
+    elif template_mode == "custom":
+        use_templates = True
+        custom_template_path = os.path.join(
+            job_gcsfuse_local_dir,
+            custom_template_path)
+        custom_template_path
+    else:
+        custom_template_path = None
+        use_templates = False
     
     args = {}
     args['project_id'] = project_id
@@ -183,15 +195,13 @@ def prepare_args_for_experiment(
         runner_args['msa_mode'] = msa_mode
         runner_args['model_type'] = model_type
         runner_args['num_models'] = num_models
-        runner_args['num_recycles'] = num_recycles
-        runner_args['model_order'] = model_order
-        runner_args['do_not_overwrite_results'] = do_not_overwrite_results
+        runner_args['num_recycle'] = num_recycle
         runner_args['rank_by'] = rank_by
         runner_args['pair_mode'] = pair_mode
         runner_args['stop_at_score'] = stop_at_score
         runner_args['zip_results'] = zip_results
         runner_args['firestore_ref'] = exp_doc_ref.id
-        runner_args['use_custom_msa'] = use_custom_msa
+        runner_args['custom_template_path'] = custom_template_path
 
         runner_args['output_gcs_path'] = os.path.join(
             'gs://',
@@ -218,6 +228,44 @@ def prepare_args_for_experiment(
 
         # Write args to Firestore
         exp_doc_ref.set(runner_args, merge=True)
+
+        commands = []
+
+                                          # - ${runner.input_dir}
+                                  # - ${runner.result_dir}
+                                  # - ${"--stop-at-score=" + runner.stop_at_score}
+                                  # - ${"--num-recycle=" + runner.num_recycle}
+                                  # - ${"--num-models=" + runner.num_models}
+                                  # - ${"--msa-mode=" + runner.msa_mode}
+                                  # - ${"--model-type=" + runner.model_type}
+                                  # - ${"--rank=" + runner.rank_by}
+                                  # - ${"--pair-mode=" + runner.pair_mode}
+
+        commands.append(runner_args['input_dir'])
+        commands.append(runner_args['result_dir'])
+        commands.append(f'--stop-at-score={runner_args["stop_at_score"]}')
+        commands.append(f'--num-recycle={runner_args["num_recycle"]}')
+        commands.append(f'--num-models={runner_args["num_models"]}')
+        commands.append(f'--msa-mode={runner_args["msa_mode"]}')
+        commands.append(f'--model-type={runner_args["model_type"]}')
+        commands.append(f'--rank={runner_args["rank_by"]}')
+        commands.append(f'--pair-mode={runner_args["pair_mode"]}')
+
+        if custom_template_path:
+            commands.append(f'--custom-template-path={custom_template_path}')
+        if use_amber:
+            commands.append('--amber')
+        if use_templates:
+            commands.append('--templates')
+        if use_cpu:
+            commands.append('--cpu')
+        if use_gpu_relax:
+            commands.append('--use-gpu-relax')
+        if overwrite_existing_results:
+            commands.append('--overwrite-existing-results')
+
+        # commands = ' '.join(commands)
+        runner_args['commands'] = commands
 
         runners.append(runner_args)
 

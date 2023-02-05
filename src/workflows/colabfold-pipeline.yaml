@@ -57,23 +57,7 @@ runColabfoldPipeline:
                           runnables:
                             - container:
                                 imageUri: ${args.image_uri}
-                                entrypoint: "python"
-                                commands:
-                                  - "run_colabfold.py"
-                                  - ${"--input-dir=" + runner.input_dir}
-                                  - ${"--result-dir=" + runner.result_dir}
-                                  - ${"--msa-mode=" + runner.msa_mode}
-                                  - ${"--num-models=" + runner.num_models}
-                                  - ${"--num-recycles=" + runner.num_recycles}
-                                  - ${"--stop-at-score=" + runner.stop_at_score}
-                                  - ${"--model-type=" + runner.model_type}
-                                  - ${"--rank-by=" + runner.rank_by}
-                                  - ${"--pair-mode=" + runner.pair_mode}
-                                  - ${"--use-custom-msa=" + runner.use_custom_msa}
-                                  - ${"--use-amber=" + runner.use_amber}
-                                  - ${"--use-templates=" + runner.use_templates}
-                                  - ${"--do-not-overwrite-results=" + runner.do_not_overwrite_results}
-                                  - ${"--zip-results=" + runner.zip_results}
+                                commands: ${runner.commands}
                                 options: "--privileged"
                                 volumes:
                                   - "/var/lib/nvidia/lib64:/usr/local/nvidia/lib64"

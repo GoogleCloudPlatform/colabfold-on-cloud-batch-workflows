@@ -18,10 +18,11 @@ import argparse
 import logging
 import sys
 
-from colabfold.batch import get_queries, run
-from colabfold.download import default_data_dir
+from colabfold.batch import get_queries, run, set_model_type
+from colabfold.download import default_data_dir, download_alphafold_params
 from colabfold.utils import setup_logging
 from pathlib import Path
+import os
 
 
 def run_colabfold(args):
@@ -31,6 +32,9 @@ def run_colabfold(args):
         logging_setup = True
 
     queries, is_complex = get_queries(args.input_dir)
+    model_type = set_model_type(is_complex, args.model_type)
+    download_alphafold_params(model_type, Path("."))
+    
     run(
         queries=queries,
         result_dir=args.result_dir,
