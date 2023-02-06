@@ -119,8 +119,8 @@ gcloud notebooks instances create colabfold-workbench \
 
 Connect to JupyterLab on your Vertex Workbench instance and start a JupyterLab terminal.
 
-From the JupyterLab terminal clone the demo repository:
-`git clone https://github.com/GoogleCloudPlatform/vertex-ai-alphafold-inference-pipeline.git`
+From the JupyterLab terminal clone the demo repository:  
+`https://github.com/GoogleCloudPlatform/colabfold-on-cloud-batch-workflows.git`
 
 
 ## Getting started
