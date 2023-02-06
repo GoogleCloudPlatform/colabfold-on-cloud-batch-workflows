@@ -2,7 +2,7 @@
 
 This repository maintains code samples demonstrating how to operationalize ColabFold batch inference using Google Workflows and Cloud Batch.
 This repository was developed exclusively for demonstration purposes.
-No modifications were made to the ColabFold software. The Colabfold version used in this solution is the v1.3.0.
+No modifications were made to the ColabFold software. The Colabfold version used in this solution is the v1.5.0.
 
 ## Solutions architecture
 
