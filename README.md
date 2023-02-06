@@ -47,7 +47,7 @@ cloudtrace.googleapis.com \
 iamcredentials.googleapis.com \
 monitoring.googleapis.com \
 logging.googleapis.com \
-file.googleapis.com \
+firestore.googleapis.com \
 workflows.googleapis.com \
 batch.googleapis.com \
 notebooks.googleapis.com
