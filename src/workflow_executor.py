@@ -233,17 +233,6 @@ def prepare_args_for_experiment(
         exp_doc_ref.set(runner_args, merge=True)
 
         commands = []
-
-                                          # - ${runner.input_dir}
-                                  # - ${runner.result_dir}
-                                  # - ${"--stop-at-score=" + runner.stop_at_score}
-                                  # - ${"--num-recycle=" + runner.num_recycle}
-                                  # - ${"--num-models=" + runner.num_models}
-                                  # - ${"--msa-mode=" + runner.msa_mode}
-                                  # - ${"--model-type=" + runner.model_type}
-                                  # - ${"--rank=" + runner.rank_by}
-                                  # - ${"--pair-mode=" + runner.pair_mode}
-
         commands.append(runner_args['input_dir'])
         commands.append(runner_args['result_dir'])
         commands.append(f'--stop-at-score={runner_args["stop_at_score"]}')
